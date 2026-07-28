@@ -1,5 +1,4 @@
 pipeline {
-
     agent any
 
     stages {
@@ -10,10 +9,10 @@ pipeline {
             }
         }
 
-       stage('Deploy') {
-    steps {
-        sshagent(['github-ssh']) {
-            sh '''
+        stage('Deploy') {
+            steps {
+                sshagent(['github-ssh']) {
+                    sh '''
 ssh -o StrictHostKeyChecking=no ubuntu@172.31.2.33 <<EOF
 cd /home/ubuntu/flask-app
 git config --global --add safe.directory /home/ubuntu/flask-app
@@ -23,6 +22,9 @@ nohup python3 setup.py > output.log 2>&1 &
 exit
 EOF
 '''
+                }
+            }
         }
+
     }
 }
