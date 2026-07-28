@@ -12,7 +12,7 @@ pipeline {
 
        stage('Deploy') {
     steps {
-        sshagent(['git']) {
+        sshagent(['github-ssh']) {
             sh '''
 ssh -o StrictHostKeyChecking=no ubuntu@172.31.2.33 <<EOF
 cd /home/ubuntu/flask-app
