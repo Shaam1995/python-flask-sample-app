@@ -2,7 +2,7 @@
 
 ![Flask plus Codefresh](docker-flask-codefresh.jpg)
 
-Original source code from https://github.com/pallets/flask/tree/master/examples/tutorial
+Original source code 
 
 ## Docker instructions
 
