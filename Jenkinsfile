@@ -12,7 +12,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sshagent(['app-server']) {
+                sshagent(['github-ssh']) {
 
                     sh '''
 
