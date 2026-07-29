@@ -16,17 +16,17 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Deploy Docker Container') {
             steps {
                 sshagent(['github-ssh']) {
+
                     sh """
-ssh -o StrictHostKeyChecking=no ${APP_USER}@${APP_SERVER} <<EOF
+ssh -o StrictHostKeyChecking=no ${APP_USER}@${APP_SERVER} << 'EOF'
 
 set -e
 
-# Clone repository if it does not exist
+# Clone or update repository
 if [ ! -d "${APP_DIR}/.git" ]; then
-    rm -rf ${APP_DIR}
     git clone ${REPO_URL} ${APP_DIR}
 else
     cd ${APP_DIR}
@@ -35,27 +35,24 @@ fi
 
 cd ${APP_DIR}
 
-# Create Python virtual environment if needed
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
-fi
+echo "Building Docker image..."
 
-source venv/bin/activate
+docker build -t flaskr .
 
-pip install --upgrade pip
+echo "Stopping old container..."
 
-pip install -r requirements.txt
+docker stop flask-app || true
+docker rm flask-app || true
 
-# Stop old Flask process
-pkill -f "python3.*flask" || true
-pkill -f "python3.*app.py" || true
+echo "Starting new container..."
 
-# Start application
-nohup python3 -m flask --app flaskr run --host=0.0.0.0 --port=5000 > output.log 2>&1 &
+docker run -d \
+    --name flask-app \
+    -p 5000:5000 \
+    --restart unless-stopped \
+    flaskr
 
-sleep 5
-
-echo "Application Started"
+docker ps
 
 EOF
 """
@@ -66,11 +63,11 @@ EOF
 
     post {
         success {
-            echo "Deployment Successful"
+            echo "Docker Deployment Successful"
         }
 
         failure {
-            echo "Deployment Failed"
+            echo "Docker Deployment Failed"
         }
     }
 }
