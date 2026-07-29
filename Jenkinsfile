@@ -1,16 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        APP_SERVER = "172.31.2.33"
-        APP_USER   = "ubuntu"
-        APP_DIR    = "/home/ubuntu/python-flask-sample-app"
-        REPO_URL   = "https://github.com/Shaam1995/python-flask-sample-app.git"
-
-        IMAGE_NAME = "flaskr"
-        CONTAINER  = "flask-container"
-    }
-
     stages {
 
         stage('Checkout') {
@@ -19,59 +9,22 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Deploy') {
             steps {
                 sshagent(['github-ssh']) {
-                    sh """
-ssh -o StrictHostKeyChecking=no ${APP_USER}@${APP_SERVER} << 'EOF'
-
-set -e
-
-cd ${APP_DIR}
-
-echo "===== Current Directory ====="
-pwd
-
-echo "===== Pull Latest Code ====="
-git config --global --add safe.directory ${APP_DIR}
+                    sh '''
+ssh -o StrictHostKeyChecking=no ubuntu@172.31.2.33 <<EOF
+cd /home/ubuntu/flask-app
+git config --global --add safe.directory /home/ubuntu/flask-app
 git pull origin master
-
-echo "===== Docker Version ====="
-docker --version
-
-echo "===== Build Docker Image ====="
-docker build -t ${IMAGE_NAME}:latest .
-
-echo "===== Stop Old Container ====="
-docker stop ${CONTAINER} || true
-
-echo "===== Remove Old Container ====="
-docker rm ${CONTAINER} || true
-
-echo "===== Run New Container ====="
-docker run -d \
-  --name ${CONTAINER} \
-  -p 5000:5000 \
-  --restart unless-stopped \
-  ${IMAGE_NAME}:latest
-
-echo "===== Running Containers ====="
-docker ps
-
+pkill -f setup.py || true
+nohup python3 app.py > output.log 2>&1 &
+exit
 EOF
-"""
+'''
                 }
             }
         }
-    }
 
-    post {
-        success {
-            echo "Deployment completed successfully."
-        }
-
-        failure {
-            echo "Deployment failed."
-        }
     }
 }
