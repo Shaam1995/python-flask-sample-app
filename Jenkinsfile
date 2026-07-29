@@ -8,7 +8,19 @@ pipeline {
                 checkout scm
             }
         }
+stage('Run Docker Container') {
+    steps {
+        sh '''
+        docker stop flask-container || true
+        docker rm flask-container || true
 
+        docker run -d \
+            --name flask-container \
+            -p 5000:5000 \
+            flaskr:latest
+        '''
+    }
+}
         stage('Deploy') {
             steps {
                 sshagent(['github-ssh']) {
