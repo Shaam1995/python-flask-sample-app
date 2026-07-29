@@ -4,6 +4,10 @@ pipeline {
     environment {
         APP_SERVER = "172.31.2.33"
         APP_USER   = "ubuntu"
+        APP_DIR    = "/home/ubuntu/flask-app"
+
+        IMAGE_NAME = "flaskr"
+        CONTAINER  = "flask-container"
     }
 
     stages {
@@ -20,38 +24,49 @@ pipeline {
                     sh """
 ssh -o StrictHostKeyChecking=no ${APP_USER}@${APP_SERVER} << 'EOF'
 
-cd /home/ubuntu/flask-app
+set -e
 
-echo "Pull latest code..."
-git config --global --add safe.directory /home/ubuntu/flask-app
+cd ${APP_DIR}
+
+echo "===== Current Directory ====="
+pwd
+
+echo "===== Pull Latest Code ====="
+git config --global --add safe.directory ${APP_DIR}
 git pull origin master
 
-echo "Activate virtual environment..."
-source devenv/bin/activate
+echo "===== Docker Version ====="
+docker --version
 
-echo "Install dependencies..."
-pip install -r requirements.txt
+echo "===== Build Docker Image ====="
+docker build -t ${IMAGE_NAME}:latest .
 
-echo "Stop old Flask process..."
-pkill -f flask || true
+echo "===== Stop Old Container ====="
+docker stop ${CONTAINER} || true
 
-echo "Start Flask application..."
-export FLASK_APP=flaskr
-nohup flask run --host=0.0.0.0 --port=5000 > output.log 2>&1 &
+echo "===== Remove Old Container ====="
+docker rm ${CONTAINER} || true
 
-echo "Deployment completed."
+echo "===== Run New Container ====="
+docker run -d \
+  --name ${CONTAINER} \
+  -p 5000:5000 \
+  --restart unless-stopped \
+  ${IMAGE_NAME}:latest
+
+echo "===== Running Containers ====="
+docker ps
 
 EOF
 """
                 }
             }
         }
-
     }
 
     post {
         success {
-            echo "Deployment to EC2 completed successfully."
+            echo "Deployment completed successfully."
         }
 
         failure {
