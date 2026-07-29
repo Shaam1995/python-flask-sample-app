@@ -18,7 +18,7 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['git']) {
+                sshagent(['github-ssh']) {
                     sh """
 ssh -o StrictHostKeyChecking=no ${APP_USER}@${APP_SERVER} <<EOF
 
