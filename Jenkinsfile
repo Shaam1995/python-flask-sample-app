@@ -5,6 +5,7 @@ pipeline {
         APP_SERVER = "172.31.2.33"
         APP_USER   = "ubuntu"
         APP_DIR    = "/home/ubuntu/flask-app"
+        REPO_URL   = "https://github.com/Shaam1995/python-flask-sample-app.git"
 
         IMAGE_NAME = "flaskr"
         CONTAINER  = "flask-container"
