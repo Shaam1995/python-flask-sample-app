@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "my-app-image"
+        IMAGE_NAME = "flask-my-app"
         IMAGE_TAG  = "v1.0.1"
     }
 
@@ -32,7 +32,7 @@ pipeline {
         stage('Push Docker Image') {
             // Optional - only runs on main branch. Update registry/credentials as needed.
             when {
-                branch 'main'
+                branch 'master'
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
